@@ -27,19 +27,19 @@
     <form method="get">
         <input type="text" name="org" placeholder="github organisation name" value="<?=$org;?>">
         <input type="text" name="admin" placeholder="admin" value="<?=$admin;?>">
-        <input type="submit" value="Enter">
+        <input type="submit" value="Retrieve">
     </form>
 
     <br>
     <input type="password" id="passwd" placeholder="password">
-    <button id="updateRepos" type="button" name="button">Uuenda repode ja pull request'ide loend</button>
-    <button id="updateEvent" type="button" name="button">Valideeri pull request'id</button>
-    <button id="updateUsers" type="button" name="button">Uuenda kasutajate andmed</button>
+    <button id="updateRepos" type="button" name="button">Update repos and pull requests</button>
+    <button id="updateEvent" type="button" name="button">Validate pull requests</button>
+    <button id="updateUsers" type="button" name="button">Update user real names</button>
     <br>
 
     <?php
         if(!empty($org) && !empty($admin)){
-            echo "Organisatsioon: ".$org;
+            echo "Organisation: ".$org;
             echo "<br>";
             echo "Admin: ".$admin;
             echo "<br>";

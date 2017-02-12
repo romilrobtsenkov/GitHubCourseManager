@@ -23,9 +23,6 @@ window.onload = function(){
             if (this.readyState == 4 && this.status == 200) {
 
                 var data = JSON.parse(this.responseText);
-
-                //console.log(data);
-
                 parseRequest(data);
 
             }
@@ -146,7 +143,7 @@ window.onload = function(){
 
         var queryDate = new Date(data.queryTime*1000);
 
-        document.querySelector("#timeFetched").innerHTML = "Põhindmed seisuga: " + queryDate + "<br><br>";
+        document.querySelector("#timeFetched").innerHTML = "Main repo and pull requests retrieved: " + queryDate + "<br><br>";
 
         //console.log(dataPerUsers);
 
@@ -156,7 +153,7 @@ window.onload = function(){
         // HEADERS
         var headerRow = document.createElement("tr");
         var nameCol = document.createElement("th");
-        nameCol.innerHTML = "Name";
+        nameCol.innerHTML = "usernames";
         headerRow.appendChild(nameCol);
         data.repos.forEach(function(repo, key){
 
