@@ -22,25 +22,79 @@ window.onload = function(){
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
 
-                document.querySelector(".loader").style.display = "none";
-
                 var data = JSON.parse(this.responseText);
 
                 //console.log(data);
 
-                reOrderData(data);
-                // sort by name/username
-                dataPerUsers = dataPerUsers.sort(function(a,b) {
-                    if(a.name.toLowerCase() < b.name.toLowerCase()) return -1;
-                    if(a.name.toLowerCase() > b.name.toLowerCase()) return 1;
-                    return 0;
-                });
+                parseRequest(data);
 
-                printTable(data);
             }
         };
         xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin, true);
         xhttp.send();
+    }
+
+    document.querySelector("#updateRepos").addEventListener("click", function(){
+        document.querySelector(".loader").style.display = "block";
+
+        var passwd = document.querySelector("#passwd").value;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(this.responseText);
+                parseRequest(data);
+            }
+        };
+        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateRepos=true&passwd="+passwd, true);
+        xhttp.send();
+    });
+    document.querySelector("#updateEvent").addEventListener("click", function(){
+        document.querySelector(".loader").style.display = "block";
+
+        var passwd = document.querySelector("#passwd").value;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(this.responseText);
+                parseRequest(data);
+            }
+        };
+        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateEvents=true&passwd="+passwd, true);
+        xhttp.send();
+    });
+    document.querySelector("#updateUsers").addEventListener("click", function(){
+        document.querySelector(".loader").style.display = "block";
+
+        var passwd = document.querySelector("#passwd").value;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(this.responseText);
+                parseRequest(data);
+            }
+        };
+        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateUsers=true&passwd="+passwd, true);
+        xhttp.send();
+    });
+
+    function parseRequest(data){
+        //console.log(data);
+        document.querySelector(".loader").style.display = "none";
+        dataPerUsers = [];
+        content.innerHTML = "";
+
+        reOrderData(data);
+        // sort by name/username
+        dataPerUsers = dataPerUsers.sort(function(a,b) {
+            if(a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+            if(a.name.toLowerCase() > b.name.toLowerCase()) return 1;
+            return 0;
+        });
+
+        printTable(data);
     }
 
     function reOrderData(data){
@@ -92,7 +146,7 @@ window.onload = function(){
 
         var queryDate = new Date(data.queryTime*1000);
 
-        document.querySelector("#timeFetched").innerHTML = "Andmed seisuga: " + queryDate + "<br><br>";
+        document.querySelector("#timeFetched").innerHTML = "Põhindmed seisuga: " + queryDate + "<br><br>";
 
         //console.log(dataPerUsers);
 

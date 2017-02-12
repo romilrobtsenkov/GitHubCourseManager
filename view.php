@@ -13,7 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>GitHub manager</title>
     <script>
         var org = "<?=$org;?>";
         var admin = "<?=$admin;?>";
@@ -30,6 +30,11 @@
         <input type="submit" value="Enter">
     </form>
 
+    <br>
+    <input type="password" id="passwd" placeholder="password">
+    <button id="updateRepos" type="button" name="button">Uuenda repode ja pull request'ide loend</button>
+    <button id="updateEvent" type="button" name="button">Valideeri pull request'id</button>
+    <button id="updateUsers" type="button" name="button">Uuenda kasutajate andmed</button>
     <br>
 
     <?php

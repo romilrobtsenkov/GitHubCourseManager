@@ -1,110 +1,157 @@
 <?php
-    require('config.php');
-    // Contains $token ="XXXXXX"; allows up to 5000 req/hr can be generated https://github.com/settings/tokens
-    // public_repo  Access public repositories is only neccessery to mark
+require('config.php');
+// Contains $token ="XXXXXX"; allows up to 5000 req/hr can be generated https://github.com/settings/tokens
+// public_repo  Access public repositories is only neccessery to mark
 
-    $reposData = new StdClass();
+$reposData = new StdClass();
 
-    // GITHUB api requires browser simulation
-    $options  = array('http' => array('user_agent'=> $_SERVER['HTTP_USER_AGENT'], 'header' => "Authorization: token ".$token));
-    $context  = stream_context_create($options);
+// GITHUB api requires browser simulation
+$options  = array('http' => array('user_agent'=> $_SERVER['HTTP_USER_AGENT'], 'header' => "Authorization: token ".$token));
+$context  = stream_context_create($options);
 
-    // GET REPOS
-    if(!isset($_GET["repolist"]) || !isset($_GET["org"]) || !isset($_GET["admin"])){ echo "no query"; return; }
+// GET REPOS
+if(!isset($_GET["repolist"]) || !isset($_GET["org"]) || !isset($_GET["admin"])){ echo "no query"; return; }
 
-    $fileData = json_decode(file_get_contents($file_name));
-    $eventsHistory = json_decode(file_get_contents($events_file_name));
-    $userData = json_decode(file_get_contents($users_file_name));
+$fileData = json_decode(file_get_contents($file_name));
+$eventsHistory = json_decode(file_get_contents($events_file_name));
+$userData = json_decode(file_get_contents($users_file_name));
 
-    // for optimization, do not save if not changed
-    $eventsHistory_length = count($eventsHistory);
-    $userData_length = count($userData);
+// for  later optimization, do not save if not changed
+$eventsHistory_length = count($eventsHistory);
+$userData_length = count($userData);
 
-    foreach ($fileData as $key => $org) {
+if(isset($_GET["org"]) && isset($_GET["updateRepos"]) && isset($_GET["passwd"]) && $_GET["passwd"] == $passwd){
+    //echo "updated repos";
 
-        // if less than 200s passed for this organisation
-        if($org->org == $_GET["org"] && (strtotime(date('c')) - intval($org->queryTime)) < 200){
-            //echo "<pre>";
-            //var_dump($org);
-            //echo "</pre>";
+    $existingData = returnRepoData($_GET["org"]);
+    if(!$existingData){ echo '{"error": "no org data"}'; return; }
 
-            echo json_encode($org);
-            return;
+    getRepoData($existingData->org, $existingData->admin);
 
-        }elseif ($org->org == $_GET["org"]) {
-            // remember index to update
-            $orgIndex = $key;
+    echo json_encode(returnRepoData($existingData->org));
 
-        }
+    return;
+}
 
+if(isset($_GET["org"]) && isset($_GET["admin"]) && isset($_GET["updateEvents"]) && isset($_GET["passwd"]) && $_GET["passwd"] == $passwd){
+    //echo "updated events and pull";
+
+    $existingData = returnRepoData($_GET["org"]);
+    if(!$existingData){ echo '{"error": "no org data"}'; return; }
+
+    foreach ($existingData->repos as $key => $repo) {
+        getAllNewRepoEvents($_GET["org"], $repo->name);
+        validatePulls($key, $_GET["admin"]);
     }
 
-    // update data
-
-    $repos = json_decode(file_get_contents("https://api.github.com/orgs/".$_GET["org"]."/repos", false, $context));
-
-    if(count($repos) < 1){
-
-        // try to show from file
-        foreach ($fileData as $key => $org) {
-
-            // if less than 100s passed for this organisation
-            if($org->org == $_GET["org"]){
-                //echo "<pre>";
-                //var_dump($org);
-                //echo "</pre>";
-
-                echo json_encode($org);
-                return;
-            }
-        }
-        return;
-    }
-
-    $reposData->org = $_GET["org"];
-    $reposData->admin = $_GET["admin"];
-    $reposData->repos = array();
-    $reposData->queryTime = strtotime(date('c'));
-
-    foreach ($repos as $key => $repo) {
-        getSingleRepoData($_GET["org"], $repo->name);
-
-        //validate pull requests if valid
-        validatePulls($key);
-    }
-
-
-
-    // replace with updated data
-    if (isset($orgIndex)) {
-        $fileData[$orgIndex] = $reposData;
-    } else {
-        // add new org to array
-        array_push($fileData, $reposData);
-    }
-
-    file_put_contents($file_name, json_encode($fileData));
-
+    // if new events
     if(count($eventsHistory) > $eventsHistory_length){
         // also update events history
-        echo "UPDATED EVENTS FILE <br>";
+        //echo "UPDATED EVENTS FILE <br>";
         file_put_contents($events_file_name, json_encode($eventsHistory));
     }
 
-    if(count($userData) > $userData_length){
-        // also update users
-        echo "UPDATED USERS FILE <br>";
-        file_put_contents($users_file_name, json_encode($userData));
-    }
+    //update valid pull list
+    $fileData[$orgIndex] = $existingData;
+    file_put_contents($file_name, json_encode($fileData));
 
-    //echo "<pre>";
-    //var_dump($fileData);
-    //echo "</pre>";
-
-    echo json_encode($reposData);
+    echo json_encode(returnRepoData($existingData->org));
 
     return;
+}
 
+if(isset($_GET["org"]) && isset($_GET["updateUsers"]) && isset($_GET["passwd"]) && $_GET["passwd"] == $passwd){
+    //echo "updated users";
+
+    $existingData = returnRepoData($_GET["org"]);
+    if(!$existingData){ echo '{"error": "no org data"}'; return; }
+
+    foreach ($existingData->repos as $repo) {
+        foreach ($repo->openPulls as $open) {
+            if(!$open->user_real_name){
+                $open->user_real_name = updateUserName($open->user);
+            }
+        }
+        foreach ($repo->closedPulls as $closed) {
+            if(!$closed->user_real_name){
+                $closed->user_real_name = updateUserName($closed->user);
+            }
+        }
+    }
+
+    if(count($userData) > $userData_length){
+        // if any new names
+        //echo "UPDATED USERS AND MAIN FILE <br>";
+        file_put_contents($users_file_name, json_encode($userData));
+
+        // also update main file
+        $fileData[$orgIndex] = $existingData;
+        file_put_contents($file_name, json_encode($fileData));
+    }
+
+    echo json_encode(returnRepoData($existingData->org));
+
+    return;
+}
+
+// ELSE
+
+// just return repo data
+$existingData = returnRepoData($_GET["org"]);
+if($existingData){
+    echo json_encode($existingData);
+}else{
+    // get latest main data
+    echo json_encode(getRepoData($_GET["org"], $_GET["admin"]));
+}
+
+/*
+    FUNCTIONS
+*/
+
+function returnRepoData($org_name){
+
+    foreach ($GLOBALS["fileData"] as $key => $org) {
+        // if less than 200s passed for this organisation
+        if($org->org == $org_name && (strtotime(date('c')) - intval($org->queryTime)) < 20000000){
+            $GLOBALS["orgIndex"] = $key;
+            return $org;
+        }
+    }
+
+    return null;
+}
+
+function getRepoData($getOrg, $getAdmin){
+
+    $repos = json_decode(file_get_contents("https://api.github.com/orgs/".$getOrg."/repos", false, $GLOBALS["context"]));
+
+    if(count($repos) < 1){
+        return json_encode(new StdClass());
+    }
+
+    $GLOBALS["reposData"]->org = $getOrg;
+    $GLOBALS["reposData"]->admin = $getAdmin;
+    $GLOBALS["reposData"]->repos = array();
+    $GLOBALS["reposData"]->queryTime = strtotime(date('c'));
+
+    foreach ($repos as $key => $repo) {
+        getSingleRepoData($getOrg, $repo->name);
+
+    }
+
+    // replace with updated data
+    if (isset($GLOBALS["orgIndex"])) {
+        $GLOBALS["fileData"][$GLOBALS["orgIndex"]] = $GLOBALS["reposData"];
+    } else {
+        // add new org to array
+        array_push($GLOBALS["fileData"], $GLOBALS["reposData"]);
+    }
+
+    file_put_contents($GLOBALS["file_name"], json_encode($GLOBALS["fileData"]));
+
+    return $GLOBALS["reposData"];
+}
 
 function getSingleRepoData($org, $repoName){
     $open = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/pulls", false, $GLOBALS["context"]));
@@ -153,7 +200,7 @@ function getSingleRepoData($org, $repoName){
         array_push($o->closedPulls, $p);
     }
 
-    getAllNewRepoEvents($_GET["org"], $repoName);
+    //getAllNewRepoEvents($_GET["org"], $repoName);
 
     array_push($GLOBALS["reposData"]->repos, $o);
 
@@ -194,14 +241,14 @@ function getAllNewRepoEvents($org, $repoName){
 
 }
 
-function validatePulls($index) {
+function validatePulls($index, $admin) {
 
-    foreach ($GLOBALS["reposData"]->repos[$index]->closedPulls as $key => $pull) {
+    foreach ($GLOBALS["existingData"]->repos[$index]->closedPulls as $key => $pull) {
 
         foreach ($GLOBALS["eventsHistory"] as $key => $event) {
 
             /// if admin closed current pull
-            if($event->actor->login == $GLOBALS["reposData"]->admin && $pull->html_url == $event->issue->pull_request->html_url){
+            if($event->actor->login == $admin && $pull->html_url == $event->issue->pull_request->html_url){
 
                 $pull->valid = true;
                 //echo "validated <br>";
@@ -218,25 +265,24 @@ function getRealName($username){
             return $u->user_real_name;
         }
     }
+    return null;
+}
 
-    // retrieve once in 4 hours, otherwise return null
-    if (isset($GLOBALS["orgIndex"]) && (strtotime(date('c')) - intval($GLOBALS["fileData"][$GLOBALS["orgIndex"]]->queryTime)) < 14400) {
-        return null;
-    }
+function updateUserName($username){
+    $ud = json_decode(file_get_contents("https://api.github.com/users/".$username, false, $GLOBALS["context"]));
 
-    // missing, get real name
-    $userData = json_decode(file_get_contents("https://api.github.com/users/".$username, false, $GLOBALS["context"]));
-
-    if(!is_null($userData->name) ){
+    if(!is_null($ud->name) ){
 
         $u = new StdClass();
         $u->username = $username;
-        $u->user_real_name = $userData->name;
-        $u->html_url = $userData->html_url;
+        $u->user_real_name = $ud->name;
+        $u->html_url = $ud->html_url;
 
         array_push($GLOBALS["userData"], $u);
 
-        return $userData->name;
+        //echo ($ud->name." ".count($GLOBALS["userData"])." <br>");
+
+        return $ud->name;
     }else{
         return null;
     }
