@@ -5,6 +5,8 @@ Requirements
 - config file
 - GitHub token (get here)[https://github.com/settings/tokens]
 
+**NB! When first running application, text files must contain `[]`**
+
 **config.php contents**
 ```PHP
 <?php
@@ -16,7 +18,7 @@ Requirements
 ?>
 ```
 
-When using links can be shared 
+When using, links can be shared 
 - org (github organisation name, used to find and list all its repos) 
 - admin (course teacher, used to validate if pull request is closed by teacher)
 - exclude (excludes columns from table in UI)
