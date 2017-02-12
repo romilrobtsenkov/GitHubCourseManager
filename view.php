@@ -33,7 +33,7 @@
     <br>
     <input type="password" id="passwd" placeholder="password">
     <button id="updateRepos" type="button" name="button">Update repos and pull requests</button>
-    <button id="updateEvent" type="button" name="button">Validate pull requests</button>
+    <button id="updateEvents" type="button" name="button">Validate pull requests</button>
     <button id="updateUsers" type="button" name="button">Update user real names</button>
     <br>
 

@@ -31,40 +31,24 @@ window.onload = function(){
         xhttp.send();
     }
 
+
+
     document.querySelector("#updateRepos").addEventListener("click", function(){
-        document.querySelector(".loader").style.display = "block";
-
-        var passwd = document.querySelector("#passwd").value;
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = JSON.parse(this.responseText);
-                parseRequest(data);
-            }
-        };
-        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateRepos=true&passwd="+passwd, true);
-        xhttp.send();
+        update("updateRepos");
     });
-    document.querySelector("#updateEvent").addEventListener("click", function(){
-        document.querySelector(".loader").style.display = "block";
-
-        var passwd = document.querySelector("#passwd").value;
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = JSON.parse(this.responseText);
-                parseRequest(data);
-            }
-        };
-        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateEvents=true&passwd="+passwd, true);
-        xhttp.send();
+    document.querySelector("#updateEvents").addEventListener("click", function(){
+        update("updateEvents");
     });
     document.querySelector("#updateUsers").addEventListener("click", function(){
-        document.querySelector(".loader").style.display = "block";
+        update("updateUsers");
+    });
+
+    function update(eventName){
 
         var passwd = document.querySelector("#passwd").value;
+        if(!passwd) {alert('add passwd'); return;}
+
+        document.querySelector(".loader").style.display = "block";
 
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -73,9 +57,9 @@ window.onload = function(){
                 parseRequest(data);
             }
         };
-        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&updateUsers=true&passwd="+passwd, true);
+        xhttp.open("GET", "api.php?repolist=true&org="+org+"&admin="+admin+"&"+eventName+"=true&passwd="+passwd, true);
         xhttp.send();
-    });
+    }
 
     function parseRequest(data){
         //console.log(data);
@@ -123,6 +107,7 @@ window.onload = function(){
 
             var newUser = {
                 name: name,
+                username: pull.user,
                 pulls: [],
             };
             newUser.pulls.push(pull);
@@ -162,7 +147,7 @@ window.onload = function(){
             }
 
             var headerColumn = document.createElement("th");
-            headerColumn.innerHTML = repo.name;
+            headerColumn.innerHTML = '<a target="_blank" href="http://github.com/'+org+'/'+repo.name+'">'+repo.name+'</a>';;
             headerRow.appendChild(headerColumn);
         });
         table.appendChild(headerRow);
@@ -173,7 +158,7 @@ window.onload = function(){
 
             // name
             var col = document.createElement("td");
-            col.innerHTML = user.name;
+            col.innerHTML = '<a target="_blank" href="http://github.com/'+user.username+'">'+user.name+'</a>';
             row.appendChild(col);
 
             data.repos.forEach(function(repo){
@@ -260,9 +245,8 @@ window.onload = function(){
 
         var day = date.getDay();
         var monthIndex = date.getMonth();
-        var year = date.getYear();
 
-        return appendZero(day) + '.' + appendZero(monthIndex) + '.' + appendZero(year);
+        return appendZero(day) + '.' + appendZero(monthIndex);
     }
 
     function appendZero(nr){
