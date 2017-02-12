@@ -14,6 +14,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>GitHub manager</title>
+    <style media="screen">
+    table td:first-child a {
+        color: black;
+        text-decoration: none;
+    }
+    </style>
     <script>
         var org = "<?=$org;?>";
         var admin = "<?=$admin;?>";
