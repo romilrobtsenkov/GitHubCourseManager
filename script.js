@@ -243,8 +243,8 @@ window.onload = function(){
 
         date = new Date(date);
 
-        var day = date.getDay();
-        var monthIndex = date.getMonth();
+        var day = date.getDate();
+        var monthIndex = date.getMonth()+1;
 
         return appendZero(day) + '.' + appendZero(monthIndex);
     }

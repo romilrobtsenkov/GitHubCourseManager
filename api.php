@@ -154,8 +154,23 @@ function getRepoData($getOrg, $getAdmin){
 }
 
 function getSingleRepoData($org, $repoName){
-    $open = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/pulls", false, $GLOBALS["context"]));
-    $closed = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/pulls?state=closed", false, $GLOBALS["context"]));
+
+    $allOpen = array();
+    $allClosed = array();
+
+    $page = 1;
+    while ($open = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/pulls?page=".$page, false, $GLOBALS["context"]))) {
+        if(count($open) == 0){ break; }
+        $allOpen = array_merge($allOpen, $open);
+        $page++;
+    }
+
+    $page = 1;
+    while ($closed = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/pulls?state=closed&page=".$page, false, $GLOBALS["context"]))) {
+        if(count($closed) == 0){ break; }
+        $allClosed = array_merge($allClosed, $closed);
+        $page++;
+    }
 
     //var_dump($open);
     //var_dump($closed);
@@ -165,7 +180,7 @@ function getSingleRepoData($org, $repoName){
     $o->openPulls = array();
     $o->closedPulls = array();
 
-    foreach ($open as $key => $pull) {
+    foreach ($allOpen as $key => $pull) {
 
         $p = new StdClass();
 
@@ -182,7 +197,7 @@ function getSingleRepoData($org, $repoName){
         array_push($o->openPulls, $p);
     }
 
-    foreach ($closed as $key => $pull) {
+    foreach ($allClosed as $key => $pull) {
 
         $p = new StdClass();
 
@@ -208,21 +223,15 @@ function getSingleRepoData($org, $repoName){
 
 function getAllNewRepoEvents($org, $repoName){
 
-    $new = true;
     $page = 1;
-
-    while ($new) {
+    while ($events = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/issues/events?event=closed&page=".$page, false, $GLOBALS["context"]))) {
 
         //echo "started page ".$page." <br>";
-
-        $events = json_decode(file_get_contents("https://api.github.com/repos/".$org."/".$repoName."/issues/events?event=closed&page=".$page, false, $GLOBALS["context"]));
-
         $had_new = false;
 
         foreach ($events as $key => $newEvent) {
             if(!in_array($newEvent, $GLOBALS["eventsHistory"])){
                 array_push($GLOBALS["eventsHistory"], $newEvent);
-
                 //echo "added new event <br>";
                 $had_new = true;
             }
@@ -230,10 +239,10 @@ function getAllNewRepoEvents($org, $repoName){
 
         if($had_new){
             // atleast one new on this page, get next page events
-            $page += 1;
+            $page++;
         }else{
             // stop event query
-            $new = false;
+            break;
         }
     }
 
