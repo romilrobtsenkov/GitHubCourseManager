@@ -58,5 +58,13 @@
     </div>
 
     <div id="content"></div>
+    <p>Clone all open requests</p>
+    <textarea id="cloneOpen"></textarea>
+
+    <p>Clone all closed requests</p>
+    <textarea id="cloneClosed"></textarea>
+
+    <p>Clone all requests</p>
+    <textarea id="cloneAll"></textarea>
 </body>
 </html>

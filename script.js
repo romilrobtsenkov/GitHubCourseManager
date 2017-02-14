@@ -1,6 +1,8 @@
 window.onload = function(){
     console.log('page loaded');
 
+    var listOfAllRepos = [];
+
     if(!org || !admin){
         console.log("no admin and org specified");
         return;
@@ -76,6 +78,40 @@ window.onload = function(){
         });
 
         printTable(data);
+
+        updateCloneLink();
+    }
+
+    function updateCloneLink(){
+        var queryStringOpen = '';
+        var queryStringClosed = '';
+        var queryStringAll = '';
+
+
+        listOfAllRepos.forEach(function(obj, key){
+            if(key !== 0){
+                queryStringAll += ' && ';
+            }
+
+            if(obj.closed){
+                if(queryStringClosed !== ''){
+                    queryStringClosed += ' && ';
+                }
+                queryStringClosed += 'git clone '+obj.repo+'.git';
+
+            }else{
+                if(queryStringOpen !== ''){
+                    queryStringOpen += ' && ';
+                }
+                queryStringOpen += 'git clone '+obj.repo+'.git';
+            }
+
+            queryStringAll += 'git clone '+obj.repo+'.git';
+        });
+
+        document.querySelector('#cloneOpen').value = queryStringOpen;
+        document.querySelector('#cloneClosed').value = queryStringClosed;
+        document.querySelector('#cloneAll').value = queryStringAll;
     }
 
     function reOrderData(data){
@@ -147,7 +183,7 @@ window.onload = function(){
             }
 
             var headerColumn = document.createElement("th");
-            headerColumn.innerHTML = '<a target="_blank" href="http://github.com/'+org+'/'+repo.name+'">'+repo.name+'</a>';;
+            headerColumn.innerHTML = '<a target="_blank" href="http://github.com/'+org+'/'+repo.name+'">'+repo.name+'</a>';
             headerRow.appendChild(headerColumn);
         });
         table.appendChild(headerRow);
@@ -169,13 +205,17 @@ window.onload = function(){
 
                 var currentLevel = [];
                 var selectedIndex = -1;
+                //console.log(selectedIndex);
 
+                //add pulls to users
                 user.pulls.forEach(function(pull, index){
                     if(repo.name == pull.repo_name){
                         currentLevel.push(pull);
-                        if(pull.valid){ selectedIndex = index; }
+                        if(pull.valid){ selectedIndex++; }
                     }
                 });
+
+                //console.log(user.pulls);
 
                 if(currentLevel.length > 0){
 
@@ -188,9 +228,12 @@ window.onload = function(){
 
                     // valid
                     if(selectedIndex > -1){
+                        //console.log(currentLevel);
+                        //console.log(currentLevel[selectedIndex]);
 
                         link.href = currentLevel[selectedIndex].user_repo_url;
                         linkToPull.href = currentLevel[selectedIndex].html_url;
+                        listOfAllRepos.push({"closed":true, "repo":currentLevel[selectedIndex].user_repo_url});
 
                         if(currentLevel.length > 1){
                             link.innerHTML = formatDate(currentLevel[selectedIndex].closed_at) + " ("+currentLevel.length+")";
@@ -203,8 +246,11 @@ window.onload = function(){
                         // first should be latest
                         link.href = currentLevel[0].user_repo_url;
                         linkToPull.href = currentLevel[0].html_url;
+                        listOfAllRepos.push({"closed":false, "repo":currentLevel[0].user_repo_url});
+
 
                         link.innerHTML = formatDate(currentLevel[0].updated_at);
+
                     }
                     col.appendChild(link);
                     col.innerHTML += " | ";
@@ -212,9 +258,9 @@ window.onload = function(){
                     row.appendChild(col);
 
                 }else{
-                    var col = document.createElement("td");
-                    col.innerHTML = "--";
-                    row.appendChild(col);
+                    var emptycol = document.createElement("td");
+                    emptycol.innerHTML = "--";
+                    row.appendChild(emptycol);
                 }
             });
 
