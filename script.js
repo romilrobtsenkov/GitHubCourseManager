@@ -97,16 +97,16 @@ window.onload = function(){
                 if(queryStringClosed !== ''){
                     queryStringClosed += ' && ';
                 }
-                queryStringClosed += 'git clone '+obj.repo+'.git';
+                queryStringClosed += 'git clone '+obj.repo+'.git '+obj.repo_name+'/'+obj.user;
 
             }else{
                 if(queryStringOpen !== ''){
                     queryStringOpen += ' && ';
                 }
-                queryStringOpen += 'git clone '+obj.repo+'.git';
+                queryStringOpen += 'git clone '+obj.repo+'.git '+obj.repo_name+'/'+obj.user;
             }
 
-            queryStringAll += 'git clone '+obj.repo+'.git';
+            queryStringAll += 'git clone '+obj.repo+'.git '+obj.user+'-'+obj.repo_name;
         });
 
         document.querySelector('#cloneOpen').value = queryStringOpen;
@@ -228,12 +228,12 @@ window.onload = function(){
 
                     // valid
                     if(selectedIndex > -1){
-                        //console.log(currentLevel);
+                        console.log(currentLevel);
                         //console.log(currentLevel[selectedIndex]);
 
                         link.href = currentLevel[selectedIndex].user_repo_url;
                         linkToPull.href = currentLevel[selectedIndex].html_url;
-                        listOfAllRepos.push({"closed":true, "repo":currentLevel[selectedIndex].user_repo_url});
+                        listOfAllRepos.push({"closed":true, "repo":currentLevel[selectedIndex].user_repo_url, "user": currentLevel[selectedIndex].user, "repo_name": currentLevel[selectedIndex].repo_name});
 
                         if(currentLevel.length > 1){
                             link.innerHTML = formatDate(currentLevel[selectedIndex].closed_at) + " ("+currentLevel.length+")";
@@ -246,7 +246,7 @@ window.onload = function(){
                         // first should be latest
                         link.href = currentLevel[0].user_repo_url;
                         linkToPull.href = currentLevel[0].html_url;
-                        listOfAllRepos.push({"closed":false, "repo":currentLevel[0].user_repo_url});
+                        listOfAllRepos.push({"closed":false, "repo":currentLevel[0].user_repo_url, "user": currentLevel[0].user, "repo_name": currentLevel[0].repo_name});
 
 
                         link.innerHTML = formatDate(currentLevel[0].updated_at);
