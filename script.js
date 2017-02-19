@@ -106,7 +106,7 @@ window.onload = function(){
                 queryStringOpen += 'git clone '+obj.repo+'.git '+obj.repo_name+'/'+obj.user;
             }
 
-            queryStringAll += 'git clone '+obj.repo+'.git '+obj.user+'-'+obj.repo_name;
+            queryStringAll += 'git clone '+obj.repo+'.git '+obj.repo_name+'/'+obj.user;
         });
 
         document.querySelector('#cloneOpen').value = queryStringOpen;
